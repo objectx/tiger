@@ -3,11 +3,9 @@
  *
  * AUTHOR(S): objectx
  *
- * $Id$
  */
-
-#ifndef tiger_h__a3fe984f_ce75_4ec5_8a17_6fc73fa1f64e
-#define tiger_h__a3fe984f_ce75_4ec5_8a17_6fc73fa1f64e   1
+#ifndef	tiger_h__a324fb584c589244176c2e965aa5cc34
+#define	tiger_h__a324fb584c589244176c2e965aa5cc34	1
 
 #if defined (_MSC_VER) && (1200 <= _MSC_VER)
 #pragma once
@@ -208,11 +206,7 @@ inline bool     operator >= (const Tiger::Digest &a0, const Tiger::Digest &a1) {
     return Tiger::Digest::Compare (a0, a1) >= 0 ;
 }
 
-#endif  /* tiger_h__a3fe984f_ce75_4ec5_8a17_6fc73fa1f64e */
-
+#endif  /* tiger_h__a324fb584c589244176c2e965aa5cc34 */
 /*
- * $LastChangedRevision$
- * $LastChangedBy$
- * $HeadURL$
+ * [END OF FILE]
  */
-

@@ -3,7 +3,6 @@
  *
  * AUTHOR(S): objectx
  *
- * $Id$
  */
 
 #include "Tiger.h"
@@ -363,9 +362,6 @@ namespace Tiger {
     }
 
 } /* end of [namespace Tiger] */
-
 /*
- * $LastChangedRevision$
- * $LastChangedBy$
- * $HeadURL$
+ * [END OF FILE]
  */
