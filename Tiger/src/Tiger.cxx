@@ -13,16 +13,16 @@ namespace Tiger {
 
     typedef uint64_t    state_t [3] ;
 
-    static const uint64_t       init_state_0 = 0x0123456789ABCDEFuLL ;
-    static const uint64_t       init_state_1 = 0xFEDCBA9876543210uLL ;
-    static const uint64_t       init_state_2 = 0xF096A5B4C3B2E187uLL ;
-    static const uint64_t       schedule_0 = 0xA5A5A5A5A5A5A5A5uLL ;
-    static const uint64_t       schedule_1 = 0x0123456789ABCDEFuLL ;
+    static const uint64_t	init_state_0 = 0x0123456789ABCDEFuLL ;
+    static const uint64_t	init_state_1 = 0xFEDCBA9876543210uLL ;
+    static const uint64_t	init_state_2 = 0xF096A5B4C3B2E187uLL ;
+    static const uint64_t	schedule_0 = 0xA5A5A5A5A5A5A5A5uLL ;
+    static const uint64_t	schedule_1 = 0x0123456789ABCDEFuLL ;
 
     static bool check_little_endian () {
-        unsigned int    val = 0x01020304 ;
+        unsigned int	val = 0x01020304 ;
 
-        const uint8_t * p = reinterpret_cast<const uint8_t *> (&val) ;
+        const uint8_t *	p = reinterpret_cast<const uint8_t *> (&val) ;
 
         if (p [0] == 0x04 && p [1] == 0x03 && p [2] == 0x02 && p [3] == 0x01) {
             return true ;
@@ -34,10 +34,10 @@ namespace Tiger {
         return false ;
     }
 
-    static const bool   LITTLE_ENDIAN = check_little_endian () ;
+    static const bool	LITTLE_ENDIAN = check_little_endian () ;
 
-    static void FillWork (uint64_t work [8], const void *seed, size_t size) {
-        uint8_t tmp [64] ;
+    static void	FillWork (uint64_t work [8], const void *seed, size_t size) {
+        uint8_t	tmp [64] ;
         ::memset (tmp, 0, sizeof (tmp)) ;
         if (size < sizeof (tmp)) {
             ::memcpy (tmp, seed, size) ;
@@ -47,7 +47,7 @@ namespace Tiger {
         }
         ::memset (work, 0, sizeof (work)) ;
 
-        for (int i = 0 ; i < 8 ; ++i) {
+        for (int_fast32_t i = 0 ; i < 8 ; ++i) {
             work [i] = ((static_cast<uint64_t> (tmp [8 * i + 0]) <<  0) |
                         (static_cast<uint64_t> (tmp [8 * i + 1]) <<  8) |
                         (static_cast<uint64_t> (tmp [8 * i + 2]) << 16) |
@@ -103,18 +103,18 @@ namespace Tiger {
     } while (false)
 
     static void   Compress (uint64_t *state, const uint64_t *input, const sbox_t &sbox, size_t passes) {
-        uint64_t        a = state [0] ;
-        uint64_t        b = state [1] ;
-        uint64_t        c = state [2] ;
+        uint_fast64_t	a = state [0] ;
+        uint_fast64_t	b = state [1] ;
+        uint_fast64_t	c = state [2] ;
 
-        uint64_t        x0 = input [0] ;
-        uint64_t        x1 = input [1] ;
-        uint64_t        x2 = input [2] ;
-        uint64_t        x3 = input [3] ;
-        uint64_t        x4 = input [4] ;
-        uint64_t        x5 = input [5] ;
-        uint64_t        x6 = input [6] ;
-        uint64_t        x7 = input [7] ;
+        uint_fast64_t	x0 = input [0] ;
+        uint_fast64_t	x1 = input [1] ;
+        uint_fast64_t	x2 = input [2] ;
+        uint_fast64_t	x3 = input [3] ;
+        uint_fast64_t	x4 = input [4] ;
+        uint_fast64_t	x5 = input [5] ;
+        uint_fast64_t	x6 = input [6] ;
+        uint_fast64_t	x7 = input [7] ;
 
         PASS (a, b, c, 5) ;
         SCHEDULE ;
@@ -135,11 +135,11 @@ namespace Tiger {
         state [2] = c + state [2] ;
     }
 
-    sbox_t &    InitializeSBox (sbox_t &sbox) {
+    sbox_t &	InitializeSBox (sbox_t &sbox) {
         return InitializeSBox (sbox, "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham", 64, 5) ;
     }
 
-    sbox_t &    InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) {
+    sbox_t &	InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) {
         state_t state ;
 
         state [0] = init_state_0 ;
@@ -150,31 +150,31 @@ namespace Tiger {
 
         FillWork (work, seed, seed_size) ;
 
-        for (int i = 0 ; i < (sizeof (sbox) / sizeof (sbox [0])) ; ++i) {
-            uint8_t *   p = reinterpret_cast<uint8_t *> (&sbox [i]) ;
+        for (size_t i = 0 ; i < (sizeof (sbox) / sizeof (sbox [0])) ; ++i) {
+            uint8_t *	p = reinterpret_cast<uint8_t *> (&sbox [i]) ;
 
-            uint8_t     fillval = static_cast<uint8_t> (i) ;
+            uint_fast8_t	fillval = static_cast<uint8_t> (i) ;
 
-            for (int j = 0 ; j < 8 ; ++j) {
+            for (int_fast32_t j = 0 ; j < 8 ; ++j) {
                 p [j] = fillval ;
             }
         }
 
-        int abc = 2 ;
-        uint8_t *       tp = reinterpret_cast<uint8_t *> (&sbox [0]) ;
-        uint8_t *       sp = reinterpret_cast<uint8_t *> (&state [0]) ;
+        int_fast32_t	abc = 2 ;
+        uint8_t *	tp = reinterpret_cast<uint8_t *> (&sbox [0]) ;
+        uint8_t *	sp = reinterpret_cast<uint8_t *> (&state [0]) ;
         for (size_t cnt = 0 ; cnt < passes ; ++cnt) {
-            for (int i = 0 ; i < 256 ; ++i) {
-                for (int sb = 0 ; sb < 1024 ; sb += 256) {
+            for (int_fast32_t i = 0 ; i < 256 ; ++i) {
+                for (int_fast32_t sb = 0 ; sb < 1024 ; sb += 256) {
                     ++abc ;
                     if (abc == 3) {
                         abc = 0 ;
                         Compress (state, work, sbox, 3) ;
                     }
-                    for (int col = 0 ; col < 8 ; ++col) {
-                        int     idx0 = 8 * (sb + i) + col ;
-                        int     idx1 = 8 * (sb + sp [8 * abc + col]) + col ;
-                        uint8_t  tmp = tp [idx0] ;
+                    for (int_fast32_t col = 0 ; col < 8 ; ++col) {
+                        int_fast32_t	idx0 = 8 * (sb + i) + col ;
+                        int_fast32_t	idx1 = 8 * (sb + sp [8 * abc + col]) + col ;
+                        uint_fast8_t	tmp = tp [idx0] ;
                         tp [idx0] = tp [idx1] ;
                         tp [idx1] = tmp ;
                     }
@@ -341,7 +341,7 @@ namespace Tiger {
     }
 
     bool  Digest::IsEqual (const Digest &a0, const Digest &a1) {
-        for (int i = 0 ; i < sizeof (a0.values_) ; ++i) {
+        for (size_t i = 0 ; i < sizeof (a0.values_) ; ++i) {
             if (a0.values_ [i] != a1.values_ [i]) {
                 return false ;
             }
@@ -349,7 +349,7 @@ namespace Tiger {
         return true ;
     }
     bool  Digest::IsNotEqual (const Digest &a0, const Digest &a1) {
-        for (int i = 0 ; i < sizeof (a0.values_) ; ++i) {
+        for (size_t i = 0 ; i < sizeof (a0.values_) ; ++i) {
             if (a0.values_ [i] != a1.values_ [i]) {
                 return true ;
             }

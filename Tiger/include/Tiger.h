@@ -19,52 +19,59 @@ namespace Tiger {
 
     typedef uint64_t    sbox_t [4 * 256] ;
 
-    /// <summary>
-    /// Initializes sbox with default configuration.
-    /// </summary>
-    /// <param name="sbox">SBox to initialize</param>
-    /// <returns><paramref name="sbox"/><returns>
+    /**
+     * Initializes sbox with default configuration.
+     *
+     * @param sbox   SBox to be initialized
+     *
+     * @return SBOX
+     */
     sbox_t &    InitializeSBox (sbox_t &sbox) ;
 
-    /// <summary>
-    /// Initializes SBox with specified seed.
-    /// </summary>
-    /// <param name="sbox">SBox to be initialized</param>
-    /// <param name="seed">Seed for sbox initialization.</param>
-    /// <param name="seed_size">The seed size</param>
-    /// <returns><paramref name="sbox"/><returns>
+    /**
+     * Initializes SBox with specified seed.
+     *
+     * @param sbox      SBox to be initialized
+     * @param seed      Seed for sbox initialization
+     * @param seed_size The seed size
+     * @param passes    # of passes to apply
+     *
+     * @return SBOX
+     */
     sbox_t &    InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) ;
 
     class Generator ;
 
-    /// <summary>
-    /// The Tiger192 hash value.
-    /// </summary>
+    /** The Tiger192 hash value.  */
     class Digest {
         friend class Generator ;
     private:
-        uint8_t values_ [3 * 8] ;
+        uint8_t	values_ [3 * 8] ;
     private:
         Digest (const uint64_t values [3]) ;
     public:
-        /// <summary>
-        /// The copy constructor.
-        /// </summary>
-        /// <param name="src">The source</param>
-        Digest (const Digest &src) ;
-        /// <summary>
-        /// # of bytes in the hash value.
-        /// </summary>
-        /// <returns>The hash size</returns>
-        size_t  Size () const {
+	/**
+	 * The copy constructor.
+	 *
+	 * @param src The source
+	 */
+	Digest (const Digest &src) ;
+	/**
+	 * # of bytes in the hash value.
+	 *
+	 * @return The hash size
+	 */
+	size_t  Size () const {
             return sizeof (values_) ;
         }
-        /// <summary>
-        /// The accessor.
-        /// </summary>
-        /// <param name="index">Index</param>
-        /// <returns><paramref name="index">'th value</returns>
-        uint8_t At (size_t index) const {
+	/**
+	 * The accessor.
+	 *
+	 * @param index Index
+	 *
+	 * @return INDEX'th value
+	 */
+	uint8_t At (size_t index) const {
             return values_ [index] ;
         }
         uint8_t operator [] (size_t index) const {
@@ -76,42 +83,35 @@ namespace Tiger {
         const uint8_t * end () {
             return begin () + sizeof (values_) ;
         }
-        /// <summary>
-        /// Computes hash value (for <see cref="std::unordered_set"/>, <see cref="std::unordered_map"/>, etc...)
-        /// </summary>
-        /// <returns>Computed hash value</returns>
-        size_t  Hash () const ;
+	/**
+	 * Computes hash value (for std::unordered_set, std::unordered_map, etc...).
+	 *
+	 * @return Computed hash value
+	 * @see std::unordered_set
+	 * @see std::unordered_map
+	 */
+	size_t  Hash () const ;
         Digest &        Assign (const Digest &src) ;
         Digest &        operator = (const Digest &src) {
             return Assign (src) ;
         }
     public:
-        /// <summary>
-        /// Equality test.
-        /// </summary>
-        /// <param name="a0"></param>
-        /// <param name="a1"></param>
-        /// <returns><c>true</c> if <paramref name="a0"/> == <paramref name="a1"/>.
-        static bool     IsEqual (const Digest &a0, const Digest &a1) ;
-        /// <summary>
-        /// Non-Equality test.
-        /// </summary>
-        /// <param name="a0"></param>
-        /// <param name="a1"></param>
-        /// <returns><c>true</c> if <paramref name="a0"/> != <paramref name="a1"/>.
-        static bool     IsNotEqual (const Digest &a0, const Digest &a1) ;
-        /// <summary>
-        /// Compares two digest values.
-        /// </summary>
-        /// <param name="a0">Value to compare</param>
-        /// <param name="a1">Value to compare</param>
-        /// <returns>Negative when <paramref name="a0"/> &lt; <paramref name="a1"/>, Positive when a0 &gt; a1 and Zero when a0 == a1.</returns>
-        static int      Compare (const Digest &a0, const Digest &a1) ;
+	/**
+	 * Equality test.
+	 */
+	static bool     IsEqual (const Digest &a0, const Digest &a1) ;
+
+	/**
+	 * Non-Equality test.
+	 */
+	static bool     IsNotEqual (const Digest &a0, const Digest &a1) ;
+	/**
+	 * Compares two digest values.
+	 */
+	static int      Compare (const Digest &a0, const Digest &a1) ;
     } ;
 
-    /// <summary>
-    /// The Tiger192 generator.
-    /// </summary>
+    /** The Tiger192 generator.  */
     class Generator {
     private:
         enum Flags {
@@ -126,58 +126,57 @@ namespace Tiger {
         uint64_t        hash_ [3] ;
         uint64_t        buffer_ [8] ;
     public:
-        /// <summary>
-        /// The constructor.
-        /// </summary>
-        /// <param name="sbox">The sbox</param>
-        Generator (const sbox_t &sbox) ;
-        /// <summary>
-        /// The constructor with the explicit pass counts.
-        /// </summary>
-        /// <param name="sbox">The sbox</param>
-        /// <param name="cntPass"># of iterations in the compression function.</param>
-        Generator (const sbox_t &sbox, size_t cntPass) ;
-        /// <summary>
-        /// The constructor with the explicit pass counts.
-        /// </summary>
-        /// <param name="sbox">The sbox</param>
-        /// <param name="cntPass"># of iterations in the compression function.</param>
-        /// <param name="isTiger2">Use Tiger2 padding</param>
-        Generator (const sbox_t &sbox, size_t cntPass, bool isTiger2) ;
-        /// <summary>
-        /// Resets the state.
-        /// </summary>
-        /// <returns>myself</returns>
-        Generator &     Reset () ;
-        /// <summary>
-        /// Checks finalized or not.
-        /// </summary>
-        /// <returns><c>true</c> when finalized</returns>
-        bool    IsFinalized () const ;
-        /// <summary>
-        /// Use Tiger2 padding or not.
-        /// </summary>
-        /// <returns><c>true</c> if Tiger2 padding was used.</returns>
-        bool    IsTiger2 () const ;
-        /// <summary>
-        /// Updates states
-        /// </summary>
-        /// <param name="data">The input sequence</param>
-        /// <param name="size"># of bytes in the input sequence</param>
-        /// <returns>myself</returns>
-        Generator &     Update (const void *data, size_t size) ;
-        /// <summary>
-        /// Updates states
-        /// </summary>
-        /// <param name="value">The input value</param>
-        /// <returns>myself</returns>
-        Generator &     Update (uint8_t value) ;
-        /// <summary>
-        /// Computes Tiger192 digest
-        /// </summary>
-        /// <returns>Computed digest</returns>
-        /// <remarks>Once finalized, sucessive <see cref="Finalize()"/> returns the same.
-        Digest  Finalize () ;
+	/**
+	 * The constructor.
+	 *
+	 * @param sbox The sbox
+	 */
+	Generator (const sbox_t &sbox) ;
+	/**
+	 * The constructor with the explicit pass counts.
+	 *
+	 * @param sbox    The sbox
+	 * @param cntPass # of iterations in the compression function
+	 */
+	Generator (const sbox_t &sbox, size_t cntPass) ;
+	/**
+	 * The constructor with the explicit pass counts.
+	 *
+	 * @param sbox     The sbox
+	 * @param cntPass  # of iterations in the compression function.
+	 * @param isTiger2 Use Tiger2 padding
+	 */
+	Generator (const sbox_t &sbox, size_t cntPass, bool isTiger2) ;
+	/** Resets the state.  */
+	Generator &     Reset () ;
+	/** Checks finalized or not.  */
+	bool    IsFinalized () const ;
+	/** Use Tiger2 padding or not.  */
+	bool    IsTiger2 () const ;
+	/**
+	 * Updates states
+	 *
+	 * @param data   The input sequence
+	 * @param size   # of bytes in the input sequence
+	 *
+	 * @return *this
+	 */
+	Generator &     Update (const void *data, size_t size) ;
+	/**
+	 * Updates states
+	 *
+	 * @param value  The input value
+	 *
+	 * @return *this
+	 */
+	Generator &     Update (uint8_t value) ;
+	/**
+	 * Computes Tiger192 digest
+	 *
+	 * @remarks Once finalized, successive Finalize() returns the same value.
+	 * @return Computed digest
+	 */
+	Digest  Finalize () ;
     } ;
 
 } /* end of [namespace Tiger] */
