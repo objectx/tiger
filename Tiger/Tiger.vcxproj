@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\tiger.cxx" />
+    <ClCompile Include="src\Tiger.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\tiger.h" />
+    <ClInclude Include="include\Tiger.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3075869D-FED0-4796-AEC8-48C5A38B07F3}</ProjectGuid>

@@ -15,12 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\tiger.cxx">
+    <ClCompile Include="src\Tiger.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\tiger.h">
+    <ClInclude Include="include\Tiger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
