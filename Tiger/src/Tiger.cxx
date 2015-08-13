@@ -34,7 +34,7 @@ namespace Tiger {
         return false ;
     }
 
-    static const bool	LITTLE_ENDIAN = check_little_endian () ;
+    static const bool	TARGET_LITTLE_ENDIAN = check_little_endian () ;
 
     static void	FillWork (uint64_t work [8], const void *seed, size_t size) {
         uint8_t	tmp [64] ;
@@ -244,7 +244,7 @@ namespace Tiger {
         const uint8_t * p = static_cast<const uint8_t *> (data) ;
         uint8_t *       q = reinterpret_cast<uint8_t *> (&buffer_ [0]) ;
 
-        if (LITTLE_ENDIAN) {
+        if (TARGET_LITTLE_ENDIAN) {
             for (size_t i = 0 ; i < size ; ++i) {
                 size_t  idx = count_ & 0x3F ;
                 if (0 < count_ && idx == 0) {
@@ -275,7 +275,7 @@ namespace Tiger {
         }
 
         uint8_t *       q = reinterpret_cast<uint8_t *> (&buffer_ [0]) ;
-        if (LITTLE_ENDIAN) {
+        if (TARGET_LITTLE_ENDIAN) {
             q [idx] = value ;
         }
         else {
@@ -286,7 +286,7 @@ namespace Tiger {
     }
 
     static void ToByte (uint8_t *result, uint64_t value) {
-        if (LITTLE_ENDIAN) {
+        if (TARGET_LITTLE_ENDIAN) {
             memcpy (result, &value, sizeof (value)) ;
         }
         else {
