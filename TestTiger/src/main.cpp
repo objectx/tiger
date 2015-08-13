@@ -334,9 +334,11 @@ int     main (int argc, char **argv)
 
     Test () ;
     Test2 () ;
+#if defined (_WIN32) || defined (_WIN64)
     if (IsDebuggerPresent ()) {
         DebugBreak () ;
     }
+#endif
     return 0 ;
 }
 
