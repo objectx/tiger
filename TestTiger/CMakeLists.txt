@@ -1,7 +1,7 @@
 
 cmake_minimum_required (VERSION 3.0)
 
-include_directories ("${CMAKE_SOURCE_DIR}/Tiger/include" "${CMAKE_SOURCE_DIR}/Catch/include")
+include_directories ("${CMAKE_SOURCE_DIR}/Catch/include")
 
 add_executable (TestTiger "src/main.cpp")
 target_link_libraries (TestTiger Tiger)
