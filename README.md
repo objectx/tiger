@@ -1,0 +1,1 @@
+# [Tiger](http://www.cs.technion.ac.il/~biham/Reports/Tiger/) hash function
