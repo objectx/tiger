@@ -8,6 +8,7 @@
 #include "Tiger.h"
 #include <assert.h>
 #include <string.h>
+#include <algorithm>
 
 namespace Tiger {
 
@@ -39,12 +40,7 @@ namespace Tiger {
     static void FillWork (uint64_t work [8], const void *seed, size_t size) {
         uint8_t tmp [64] ;
         ::memset (tmp, 0, sizeof (tmp)) ;
-        if (size < sizeof (tmp)) {
-            ::memcpy (tmp, seed, size) ;
-        }
-        else {
-            ::memcpy (tmp, seed, sizeof (tmp)) ;
-        }
+        ::memcpy (tmp, seed, std::min (size, sizeof (tmp))) ;
         for (int_fast32_t i = 0 ; i < 8 ; ++i) {
             work [i] = ((static_cast<uint64_t> (tmp [8 * i + 0]) <<  0) |
                         (static_cast<uint64_t> (tmp [8 * i + 1]) <<  8) |
@@ -185,11 +181,8 @@ namespace Tiger {
     Generator::Generator (const sbox_t &sbox, size_t passes, bool isTiger2)
             : sbox_ (sbox)
             , count_ (0)
-            , cntPass_ (DEFAULT_PASSES)
+            , cntPass_ (std::max (DEFAULT_PASSES, passes))
             , flags_(0) {
-        if (DEFAULT_PASSES < passes) {
-            cntPass_ = passes ;
-        }
         hash_ [0] = init_state_0 ;
         hash_ [1] = init_state_1 ;
         hash_ [2] = init_state_2 ;
@@ -323,6 +316,7 @@ namespace Tiger {
         }
         return true ;
     }
+
     bool  Digest::IsNotEqual (const Digest &a0, const Digest &a1) {
         for (size_t i = 0 ; i < sizeof (a0.values_) ; ++i) {
             if (a0.values_ [i] != a1.values_ [i]) {
@@ -336,7 +330,7 @@ namespace Tiger {
         return ::memcmp (a0.values_, a1.values_, sizeof (a0.values_)) ;
     }
 
-    Digest &Digest::Assign (const Digest &src) {
+    Digest &    Digest::Assign (const Digest &src) {
         ::memcpy (values_, src.values_, sizeof (values_)) ;
         return *this ;
     }
