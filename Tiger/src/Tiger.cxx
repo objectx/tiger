@@ -210,12 +210,8 @@ namespace Tiger {
 
     Generator::Generator (const sbox_t &sbox, size_t passes, bool isTiger2)
             : sbox_ { sbox }
-            , count_ { 0 }
             , cntPass_ { std::max (DEFAULT_PASSES, passes) }
-            , flags_ { 0 } {
-        hash_ [0] = init_state_0 ;
-        hash_ [1] = init_state_1 ;
-        hash_ [2] = init_state_2 ;
+            , hash_ {{ init_state_0, init_state_1, init_state_2 }} {
         if (isTiger2) {
             flags_ |= 1u << BIT_TIGER2 ;
         }
@@ -228,14 +224,6 @@ namespace Tiger {
         hash_ [2] = init_state_2 ;
         flags_ &= ~(1u << BIT_FINALIZED) ;
         return *this ;
-    }
-
-    bool        Generator::IsFinalized () const {
-        return (flags_ & (1u << BIT_FINALIZED)) != 0 ;
-    }
-
-    bool        Generator::IsTiger2 () const {
-        return (flags_ & (1u << BIT_TIGER2)) != 0 ;
     }
 
     Generator & Generator::Update (const void *data, size_t size) {

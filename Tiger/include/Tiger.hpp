@@ -122,9 +122,9 @@ namespace Tiger {
         };
     private:
         const sbox_t &  sbox_ ;
-        size_t          count_ ;
+        size_t          count_ = 0 ;
         size_t          cntPass_ ;
-        uint32_t        flags_ ;
+        uint32_t        flags_ = 0 ;
         state_t         hash_ ;
         msgblock_t      buffer_ ;
     public:
@@ -151,10 +151,14 @@ namespace Tiger {
         Generator (const sbox_t &sbox, size_t cntPass, bool isTiger2) ;
         /** Resets the state.  */
         Generator &     Reset () ;
-        /** Checks finalized or not.  */
-        bool    IsFinalized () const ;
-        /** Use Tiger2 padding or not.  */
-        bool    IsTiger2 () const ;
+
+        bool        IsFinalized () const {
+            return (flags_ & (1u << BIT_FINALIZED)) != 0 ;
+        }
+
+        bool        IsTiger2 () const {
+            return (flags_ & (1u << BIT_TIGER2)) != 0 ;
+        }
         /**
          * Updates states
          *
@@ -164,6 +168,7 @@ namespace Tiger {
          * @return *this
          */
         Generator &     Update (const void *data, size_t size) ;
+
         /**
          * Updates states
          *
@@ -172,6 +177,7 @@ namespace Tiger {
          * @return *this
          */
         Generator &     Update (uint8_t value) ;
+
         /**
          * Computes Tiger192 digest
          *
