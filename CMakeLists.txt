@@ -23,5 +23,6 @@ setvar_default (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 enable_testing ()
-add_subdirectory (Tiger)
-add_subdirectory (TestTiger)
+
+add_subdirectory (src)
+add_subdirectory (test)
