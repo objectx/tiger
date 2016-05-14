@@ -9,4 +9,5 @@ add_library (tiger ${SOURCE_FILES} ${HEADER_FILES})
                                              $<INSTALL_INTERFACE:include>)
     target_compile_features (tiger PRIVATE cxx_auto_type
                                            cxx_delegating_constructors
-                                           cxx_nonstatic_member_init)
+                                           cxx_nonstatic_member_init
+                                           cxx_generic_lambdas)

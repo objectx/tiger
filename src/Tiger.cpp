@@ -75,52 +75,36 @@ namespace {
         }
     }
 
+    inline void round ( const Tiger::sbox_t &sbox
+                      , uint64_t &a
+                      , uint64_t &b
+                      , uint64_t &c
+                      , uint64_t x
+                      , uint64_t mul) {
+        c ^= x ;
+        auto const  c0 = static_cast<uint8_t> (c >>  0) ;
+        auto const  c1 = static_cast<uint8_t> (c >>  8) ;
+        auto const  c2 = static_cast<uint8_t> (c >> 16) ;
+        auto const  c3 = static_cast<uint8_t> (c >> 24) ;
+        auto const  c4 = static_cast<uint8_t> (c >> 32) ;
+        auto const  c5 = static_cast<uint8_t> (c >> 40) ;
+        auto const  c6 = static_cast<uint8_t> (c >> 48) ;
+        auto const  c7 = static_cast<uint8_t> (c >> 56) ;
+
+        a -= ( sbox [0 * 256 + c0]
+             ^ sbox [1 * 256 + c2]
+             ^ sbox [2 * 256 + c4]
+             ^ sbox [3 * 256 + c6]) ;
+        b += ( sbox [3 * 256 + c1]
+             ^ sbox [2 * 256 + c3]
+             ^ sbox [1 * 256 + c5]
+             ^ sbox [0 * 256 + c7]) ;
+        b *= mul ;
+    } ;
+
 }
 
 namespace Tiger {
-
-#define SCHEDULE do {                   \
-        x0 -= x7 ^ schedule_0 ;         \
-        x1 ^= x0 ;                      \
-        x2 += x1 ;                      \
-        x3 -= x2 ^ ((~x1) << 19) ;      \
-        x4 ^= x3 ;                      \
-        x5 += x4 ;                      \
-        x6 -= x5 ^ ((~x4) >> 23) ;      \
-        x7 ^= x6 ;                      \
-        x0 += x7 ;                      \
-        x1 -= x0 ^ ((~x7) << 19) ;      \
-        x2 ^= x1 ;                      \
-        x3 += x2 ;                      \
-        x4 -= x3 ^ ((~x2) >> 23) ;      \
-        x5 ^= x4 ;                      \
-        x6 += x5 ;                      \
-        x7 -= x6 ^ schedule_1 ;         \
-    } while (false)
-
-#define ROUND(A_, B_, C_, X_, MUL_) do {                                        \
-        (C_) ^= (X_) ;                                                          \
-        (A_) -= (sbox [0 * 256 + static_cast<uint8_t> ((C_) >> (0 * 8))] ^      \
-                 sbox [1 * 256 + static_cast<uint8_t> ((C_) >> (2 * 8))] ^      \
-                 sbox [2 * 256 + static_cast<uint8_t> ((C_) >> (4 * 8))] ^      \
-                 sbox [3 * 256 + static_cast<uint8_t> ((C_) >> (6 * 8))]) ;     \
-        (B_) += (sbox [3 * 256 + static_cast<uint8_t> ((C_) >> (1 * 8))] ^      \
-                 sbox [2 * 256 + static_cast<uint8_t> ((C_) >> (3 * 8))] ^      \
-                 sbox [1 * 256 + static_cast<uint8_t> ((C_) >> (5 * 8))] ^      \
-                 sbox [0 * 256 + static_cast<uint8_t> ((C_) >> (7 * 8))]) ;     \
-        (B_) *= static_cast<uint64_t> (MUL_) ;                                  \
-    } while (false)
-
-#define PASS(A_, B_, C_, MUL_)  do {            \
-        ROUND ((A_), (B_), (C_), x0, (MUL_)) ;  \
-        ROUND ((B_), (C_), (A_), x1, (MUL_)) ;  \
-        ROUND ((C_), (A_), (B_), x2, (MUL_)) ;  \
-        ROUND ((A_), (B_), (C_), x3, (MUL_)) ;  \
-        ROUND ((B_), (C_), (A_), x4, (MUL_)) ;  \
-        ROUND ((C_), (A_), (B_), x5, (MUL_)) ;  \
-        ROUND ((A_), (B_), (C_), x6, (MUL_)) ;  \
-        ROUND ((B_), (C_), (A_), x7, (MUL_)) ;  \
-    } while (false)
 
     static void   Compress ( state_t &          state
                            , const msgblock_t & input
@@ -139,15 +123,50 @@ namespace Tiger {
         uint_fast64_t   x6 = input [6] ;
         uint_fast64_t   x7 = input [7] ;
 
-        PASS (a, b, c, 5) ;
-        SCHEDULE ;
-        PASS (c, a, b, 7) ;
-        SCHEDULE ;
-        PASS (b, c, a, 9) ;
+        auto schedule = [&x0, &x1, &x2, &x3, &x4, &x5, &x6, &x7] () {
+            x0 -= x7 ^ schedule_0 ;
+            x1 ^= x0 ;
+            x2 += x1 ;
+            x3 -= x2 ^ ((~x1) << 19) ;
+            x4 ^= x3 ;
+            x5 += x4 ;
+            x6 -= x5 ^ ((~x4) >> 23) ;
+            x7 ^= x6 ;
+            x0 += x7 ;
+            x1 -= x0 ^ ((~x7) << 19) ;
+            x2 ^= x1 ;
+            x3 += x2 ;
+            x4 -= x3 ^ ((~x2) >> 23) ;
+            x5 ^= x4 ;
+            x6 += x5 ;
+            x7 -= x6 ^ schedule_1 ;
+        } ;
+
+        auto pass = [&] ( const sbox_t &S
+                        , uint64_t &A
+                        , uint64_t &B
+                        , uint64_t &C
+                        , uint64_t MUL) {
+            round (S, A, B, C, x0, MUL) ;
+            round (S, B, C, A, x1, MUL) ;
+            round (S, C, A, B, x2, MUL) ;
+            round (S, A, B, C, x3, MUL) ;
+            round (S, B, C, A, x4, MUL) ;
+            round (S, C, A, B, x5, MUL) ;
+            round (S, A, B, C, x6, MUL) ;
+            round (S, B, C, A, x7, MUL) ;
+        } ;
+
+        pass (sbox, a, b, c, 5) ;
+        schedule () ;
+        pass (sbox, c, a, b, 7) ;
+        schedule () ;
+        pass (sbox, b, c, a, 9) ;
 
         for (size_t cnt = 3 ; cnt < passes ; ++cnt) {
-            SCHEDULE ;
-            PASS (a, b, c, 9) ;
+            schedule () ;
+            pass (sbox, a, b, c, 9) ;
+
             uint64_t    tmp = a ;
             a = c ;
             c = b ;
