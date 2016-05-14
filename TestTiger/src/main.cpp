@@ -39,11 +39,11 @@ namespace {
             return put_hex_<T> (value, width) ;
         }
 
-    std::ostream &      operator << (std::ostream &output, const Tiger::Digest &result) {
+    std::ostream &      operator << (std::ostream &output, const Tiger::digest_t &result) {
         char    fill = output.fill ('0') ;
         std::ios::fmtflags      flag = output.setf (std::ios::hex | std::ios::uppercase, std::ios::basefield | std::ios::uppercase) ;
 
-        for (size_t i = 0 ; i < result.Size () ; ++i) {
+        for (size_t i = 0 ; i < result.size () ; ++i) {
             output.width (2) ;
             output << (static_cast<int> (result [i]) & 0xFF) ;
         }
@@ -62,7 +62,7 @@ TEST_CASE ("Test Generator", "[generator]") {
 
     SECTION ("(empty string)") {
         gen.Update ("", 0) ;
-        Tiger::Digest   result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -71,7 +71,7 @@ TEST_CASE ("Test Generator", "[generator]") {
     SECTION ("a") {
         gen.Update ("a", 1) ;
 
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
         out << result ;
 
         REQUIRE (out.str () == "77BEFBEF2E7EF8AB2EC8F93BF587A7FC613E247F5F247809") ;
@@ -79,7 +79,7 @@ TEST_CASE ("Test Generator", "[generator]") {
     SECTION ("abc") {
         gen.Update ("abc", 3) ;
 
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
         out << result ;
 
         REQUIRE (out.str () == "2AAB1484E8C158F2BFB8C5FF41B57A525129131C957B5F93") ;
@@ -88,7 +88,7 @@ TEST_CASE ("Test Generator", "[generator]") {
         std::string     src ("message digest") ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -97,7 +97,7 @@ TEST_CASE ("Test Generator", "[generator]") {
     SECTION ("abcdefghijklmnopqrstuvwxyz") {
         std::string     src ("abcdefghijklmnopqrstuvwxyz") ;
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -106,7 +106,7 @@ TEST_CASE ("Test Generator", "[generator]") {
     SECTION ("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") {
         std::string     src ("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") ;
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -116,7 +116,7 @@ TEST_CASE ("Test Generator", "[generator]") {
         std::string     src ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -128,7 +128,7 @@ TEST_CASE ("Test Generator", "[generator]") {
             src.append ("1234567890") ;
         }
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -138,7 +138,7 @@ TEST_CASE ("Test Generator", "[generator]") {
         std::string     src (1000000, 'a') ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -153,7 +153,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
 
     SECTION ("(empty string)") {
         gen.Update ("", 0) ;
-        Tiger::Digest   result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -162,7 +162,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
     SECTION ("a") {
         gen.Update ("a", 1) ;
 
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
         out << result ;
 
         REQUIRE (out.str () == "67E6AE8E9E968999F70A23E72AEAA9251CBC7C78A7916636") ;
@@ -170,7 +170,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
     SECTION ("abc") {
         gen.Update ("abc", 3) ;
 
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
         out << result ;
 
         REQUIRE (out.str () == "F68D7BC5AF4B43A06E048D7829560D4A9415658BB0B1F3BF") ;
@@ -179,7 +179,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
         std::string     src ("message digest") ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -188,7 +188,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
     SECTION ("abcdefghijklmnopqrstuvwxyz") {
         std::string     src ("abcdefghijklmnopqrstuvwxyz") ;
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -197,7 +197,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
     SECTION ("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") {
         std::string     src ("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") ;
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -207,7 +207,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
         std::string     src ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -219,7 +219,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
             src.append ("1234567890") ;
         }
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 
@@ -229,7 +229,7 @@ TEST_CASE ("Test Generator (Type 2)", "[generator]") {
         std::string     src (1000000, 'a') ;
 
         gen.Update (src.c_str (), src.size ()) ;
-        Tiger::Digest     result = gen.Finalize () ;
+        auto const &    result = gen.Finalize () ;
 
         out << result ;
 

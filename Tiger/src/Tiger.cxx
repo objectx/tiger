@@ -271,7 +271,7 @@ namespace Tiger {
         return *this ;
     }
 
-    Digest      Generator::Finalize () {
+    digest_t    Generator::Finalize () {
         if (! IsFinalized ()) {
             uint8_t     pad [64] ;
 
@@ -301,60 +301,11 @@ namespace Tiger {
             Compress (hash_, buffer_, sbox_, cntPass_) ;
             flags_ |= (1u << BIT_FINALIZED) ;
         }
-        return Digest (hash_) ;
-    }
-
-    Digest::Digest (const state_t &value) {
-        ToByte (&values_ [ 0], value [0]) ;
-        ToByte (&values_ [ 8], value [1]) ;
-        ToByte (&values_ [16], value [2]) ;
-    }
-
-    Digest::Digest (const Digest &src) {
-        ::memcpy (values_, src.values_, sizeof (values_)) ;
-    }
-
-    bool  Digest::IsEqual (const Digest &a0, const Digest &a1) {
-        for (size_t i = 0 ; i < sizeof (a0.values_) ; ++i) {
-            if (a0.values_ [i] != a1.values_ [i]) {
-                return false ;
-            }
-        }
-        return true ;
-    }
-
-    bool  Digest::IsNotEqual (const Digest &a0, const Digest &a1) {
-        for (size_t i = 0 ; i < sizeof (a0.values_) ; ++i) {
-            if (a0.values_ [i] != a1.values_ [i]) {
-                return true ;
-            }
-        }
-        return false ;
-    }
-
-    int Digest::Compare (const Digest &a0, const Digest &a1) {
-        return ::memcmp (a0.values_, a1.values_, sizeof (a0.values_)) ;
-    }
-
-    Digest &    Digest::Assign (const Digest &src) {
-        ::memcpy (values_, src.values_, sizeof (values_)) ;
-        return *this ;
-    }
-
-    size_t Digest::Hash () const {
-        auto v = ( asUInt64 (&values_ [ 0])
-                 ^ asUInt64 (&values_ [ 8])
-                 ^ asUInt64 (&values_ [16])) ;
-        if (sizeof (size_t) == 4) {
-            return static_cast<size_t> ((v >> 32) ^ v) ;
-        }
-        else if (sizeof (size_t) == 8) {
-            return static_cast<size_t> (v) ;
-        }
-        else {
-            assert (false) ;
-            return 0 ;
-        }
+        digest_t    result ;
+        ToByte (&result [ 0], hash_ [0]) ;
+        ToByte (&result [ 8], hash_ [1]) ;
+        ToByte (&result [16], hash_ [2]) ;
+        return result ;
     }
 } /* end of [namespace Tiger] */
 /*

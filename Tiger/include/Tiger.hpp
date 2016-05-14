@@ -21,6 +21,7 @@ namespace Tiger {
 
     using msgblock_t = std::array<uint64_t, 8> ;
 
+    using digest_t  = std::array<uint8_t, 3 * 8> ;
     /**
      * Initializes sbox with default configuration.
      *
@@ -41,77 +42,6 @@ namespace Tiger {
      * @return SBOX
      */
     sbox_t &    InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) ;
-
-    class Generator ;
-
-    /** The Tiger192 hash value.  */
-    class Digest {
-        friend class Generator ;
-    private:
-        uint8_t values_ [3 * 8] ;
-    private:
-        Digest (const state_t &value) ;
-    public:
-        /**
-         * The copy constructor.
-         *
-         * @param src The source
-         */
-        Digest (const Digest &src) ;
-        /**
-         * # of bytes in the hash value.
-         *
-         * @return The hash size
-         */
-        size_t  Size () const {
-            return sizeof (values_) ;
-        }
-        /**
-         * The accessor.
-         *
-         * @param index Index
-         *
-         * @return INDEX'th value
-         */
-        uint8_t At (size_t index) const {
-            return values_ [index] ;
-        }
-        uint8_t operator [] (size_t index) const {
-            return values_ [index] ;
-        }
-        const uint8_t * begin () const {
-            return &values_ [0] ;
-        }
-        const uint8_t * end () {
-            return begin () + sizeof (values_) ;
-        }
-        /**
-         * Computes hash value (for std::unordered_set, std::unordered_map, etc...).
-         *
-         * @return Computed hash value
-         * @see std::unordered_set
-         * @see std::unordered_map
-         */
-        size_t  Hash () const ;
-        Digest &        Assign (const Digest &src) ;
-        Digest &        operator = (const Digest &src) {
-            return Assign (src) ;
-        }
-    public:
-        /**
-         * Equality test.
-         */
-        static bool     IsEqual (const Digest &a0, const Digest &a1) ;
-
-        /**
-         * Non-Equality test.
-         */
-        static bool     IsNotEqual (const Digest &a0, const Digest &a1) ;
-        /**
-         * Compares two digest values.
-         */
-        static int      Compare (const Digest &a0, const Digest &a1) ;
-    } ;
 
     /** The Tiger192 generator.  */
     class Generator {
@@ -184,34 +114,9 @@ namespace Tiger {
          * @remarks Once finalized, successive Finalize() returns the same value.
          * @return Computed digest
          */
-        Digest  Finalize () ;
+        digest_t    Finalize () ;
     } ;
-
 } /* end of [namespace Tiger] */
-
-inline bool     operator == (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::IsEqual (a0, a1) ;
-}
-
-inline bool     operator != (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::IsNotEqual (a0, a1) ;
-}
-
-inline bool     operator <  (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::Compare (a0, a1) < 0 ;
-}
-
-inline bool     operator <= (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::Compare (a0, a1) <= 0 ;
-}
-
-inline bool     operator >  (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::Compare (a0, a1) > 0 ;
-}
-
-inline bool     operator >= (const Tiger::Digest &a0, const Tiger::Digest &a1) {
-    return Tiger::Digest::Compare (a0, a1) >= 0 ;
-}
 
 #endif  /* tiger_h__a324fb584c589244176c2e965aa5cc34 */
 /*
