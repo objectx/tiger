@@ -9,7 +9,7 @@
 #include "common.h"
 #define CATCH_CONFIG_RUNNER 1
 #include <catch.hpp>
-#include "Tiger.h"
+#include "Tiger.hpp"
 
 namespace {
     template <typename T>

@@ -5,7 +5,7 @@
  *
  */
 
-#include "Tiger.h"
+#include "Tiger.hpp"
 #include <assert.h>
 #include <string.h>
 #include <algorithm>
