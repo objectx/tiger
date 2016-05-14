@@ -10,11 +10,16 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+#include <array>
 
 namespace Tiger {
     const size_t DEFAULT_PASSES = 3 ;
 
-    typedef uint64_t    sbox_t [4 * 256] ;
+    using sbox_t = std::array<uint64_t, 4 * 256> ;
+
+    using state_t = std::array<uint64_t, 3> ;
+
+    using msgblock_t = std::array<uint64_t, 8> ;
 
     /**
      * Initializes sbox with default configuration.
@@ -45,7 +50,7 @@ namespace Tiger {
     private:
         uint8_t values_ [3 * 8] ;
     private:
-        Digest (const uint64_t values [3]) ;
+        Digest (const state_t &value) ;
     public:
         /**
          * The copy constructor.
@@ -120,8 +125,8 @@ namespace Tiger {
         size_t          count_ ;
         size_t          cntPass_ ;
         uint32_t        flags_ ;
-        uint64_t        hash_ [3] ;
-        uint64_t        buffer_ [8] ;
+        state_t         hash_ ;
+        msgblock_t      buffer_ ;
     public:
         /**
          * The constructor.

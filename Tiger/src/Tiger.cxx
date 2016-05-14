@@ -10,9 +10,7 @@
 #include <string.h>
 #include <algorithm>
 
-namespace Tiger {
-
-    typedef uint64_t    state_t [3] ;
+namespace {
 
     static const uint64_t       init_state_0 = 0x0123456789ABCDEFuLL ;
     static const uint64_t       init_state_1 = 0xFEDCBA9876543210uLL ;
@@ -20,7 +18,7 @@ namespace Tiger {
     static const uint64_t       schedule_0 = 0xA5A5A5A5A5A5A5A5uLL ;
     static const uint64_t       schedule_1 = 0x0123456789ABCDEFuLL ;
 
-    static bool check_little_endian () {
+    bool    check_little_endian () {
         unsigned int    val = 0x01020304 ;
 
         const uint8_t * p = reinterpret_cast<const uint8_t *> (&val) ;
@@ -37,21 +35,49 @@ namespace Tiger {
 
     static const bool   TARGET_LITTLE_ENDIAN = check_little_endian () ;
 
-    static void FillWork (uint64_t work [8], const void *seed, size_t size) {
-        uint8_t tmp [64] ;
-        ::memset (tmp, 0, sizeof (tmp)) ;
-        ::memcpy (tmp, seed, std::min (size, sizeof (tmp))) ;
-        for (int_fast32_t i = 0 ; i < 8 ; ++i) {
-            work [i] = ((static_cast<uint64_t> (tmp [8 * i + 0]) <<  0) |
-                        (static_cast<uint64_t> (tmp [8 * i + 1]) <<  8) |
-                        (static_cast<uint64_t> (tmp [8 * i + 2]) << 16) |
-                        (static_cast<uint64_t> (tmp [8 * i + 3]) << 24) |
-                        (static_cast<uint64_t> (tmp [8 * i + 4]) << 32) |
-                        (static_cast<uint64_t> (tmp [8 * i + 5]) << 40) |
-                        (static_cast<uint64_t> (tmp [8 * i + 6]) << 48) |
-                        (static_cast<uint64_t> (tmp [8 * i + 7]) << 56)) ;
+    inline uint64_t asUInt64 (const void *addr) {
+        auto p = static_cast<const uint8_t *> (addr) ;
+        return ( (static_cast<uint64_t> (p [0]) <<  0)
+               | (static_cast<uint64_t> (p [1]) <<  8)
+               | (static_cast<uint64_t> (p [2]) << 16)
+               | (static_cast<uint64_t> (p [3]) << 24)
+               | (static_cast<uint64_t> (p [4]) << 32)
+               | (static_cast<uint64_t> (p [5]) << 40)
+               | (static_cast<uint64_t> (p [6]) << 48)
+               | (static_cast<uint64_t> (p [7]) << 56)) ;
+    }
+
+    std::array<uint64_t, 8> make_work (const void *seed, size_t size) {
+        std::array<uint8_t, 64> tmp ;
+
+        tmp.fill (0) ;
+        ::memcpy (tmp.data (), seed, std::min (size, tmp.size ())) ;
+
+        return std::array<uint64_t, 8> {{ asUInt64 (&tmp [8 * 0])
+                                        , asUInt64 (&tmp [8 * 1])
+                                        , asUInt64 (&tmp [8 * 2])
+                                        , asUInt64 (&tmp [8 * 3])
+                                        , asUInt64 (&tmp [8 * 4])
+                                        , asUInt64 (&tmp [8 * 5])
+                                        , asUInt64 (&tmp [8 * 6])
+                                        , asUInt64 (&tmp [8 * 7]) }} ;
+    }
+
+    static void ToByte (uint8_t *result, uint64_t value) {
+        if (TARGET_LITTLE_ENDIAN) {
+            memcpy (result, &value, sizeof (value)) ;
+        }
+        else {
+            const uint8_t *     p = reinterpret_cast<const uint8_t *> (&value) ;
+            for (size_t i = 0 ; i < sizeof (value) ; ++i) {
+                result [i ^ 0x07] = p [i] ;
+            }
         }
     }
+
+}
+
+namespace Tiger {
 
 #define SCHEDULE do {                   \
         x0 -= x7 ^ schedule_0 ;         \
@@ -96,7 +122,10 @@ namespace Tiger {
         ROUND ((B_), (C_), (A_), x7, (MUL_)) ;  \
     } while (false)
 
-    static void   Compress (uint64_t *state, const uint64_t *input, const sbox_t &sbox, size_t passes) {
+    static void   Compress ( state_t &          state
+                           , const msgblock_t & input
+                           , const sbox_t &     sbox
+                           , size_t             passes) {
         uint_fast64_t   a = state [0] ;
         uint_fast64_t   b = state [1] ;
         uint_fast64_t   c = state [2] ;
@@ -130,33 +159,37 @@ namespace Tiger {
     }
 
     sbox_t &    InitializeSBox (sbox_t &sbox) {
-        return InitializeSBox (sbox, "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham", 64, 5) ;
+        return InitializeSBox ( sbox
+                              , "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham"
+                              , 64
+                              , 5) ;
     }
 
     sbox_t &    InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) {
-        state_t state ;
+        state_t state {{ init_state_0
+                       , init_state_1
+                       , init_state_2 }};
 
-        state [0] = init_state_0 ;
-        state [1] = init_state_1 ;
-        state [2] = init_state_2 ;
-
-        uint64_t        work [8] ;
-
-        FillWork (work, seed, seed_size) ;
-
-        for (size_t i = 0 ; i < (sizeof (sbox) / sizeof (sbox [0])) ; ++i) {
-            uint8_t *   p = reinterpret_cast<uint8_t *> (&sbox [i]) ;
-
-            uint_fast8_t        fillval = static_cast<uint8_t> (i) ;
-
-            for (int_fast32_t j = 0 ; j < 8 ; ++j) {
-                p [j] = fillval ;
-            }
+        for (size_t i = 0 ; i < sbox.size () ; ++i) {
+            auto make_fillval = [](size_t idx) -> uint64_t {
+                auto v = static_cast<uint64_t> (idx & 0xFFu) ;
+                return ( (v <<  0)
+                       | (v <<  8)
+                       | (v << 16)
+                       | (v << 24)
+                       | (v << 32)
+                       | (v << 40)
+                       | (v << 48)
+                       | (v << 56)) ;
+            } ;
+            sbox [i] = make_fillval (i) ;
         }
 
+        auto    work = make_work (seed, seed_size) ;
+
         int_fast32_t    abc = 2 ;
-        uint8_t *       tp = reinterpret_cast<uint8_t *> (&sbox [0]) ;
-        uint8_t *       sp = reinterpret_cast<uint8_t *> (&state [0]) ;
+        auto    tp = reinterpret_cast<uint8_t *> (&sbox [0]) ;
+        auto    sp = reinterpret_cast<uint8_t *> (&state [0]) ;
         for (size_t cnt = 0 ; cnt < passes ; ++cnt) {
             for (int_fast32_t i = 0 ; i < 256 ; ++i) {
                 for (int_fast32_t sb = 0 ; sb < 1024 ; sb += 256) {
@@ -166,11 +199,8 @@ namespace Tiger {
                         Compress (state, work, sbox, 3) ;
                     }
                     for (int_fast32_t col = 0 ; col < 8 ; ++col) {
-                        int_fast32_t    idx0 = 8 * (sb + i) + col ;
-                        int_fast32_t    idx1 = 8 * (sb + sp [8 * abc + col]) + col ;
-                        uint_fast8_t    tmp = tp [idx0] ;
-                        tp [idx0] = tp [idx1] ;
-                        tp [idx1] = tmp ;
+                        std::swap ( tp [8 * (sb + i                 ) + col]
+                                  , tp [8 * (sb + sp [8 * abc + col]) + col]) ;
                     }
                 }
             }
@@ -179,10 +209,10 @@ namespace Tiger {
     }
 
     Generator::Generator (const sbox_t &sbox, size_t passes, bool isTiger2)
-            : sbox_ (sbox)
-            , count_ (0)
-            , cntPass_ (std::max (DEFAULT_PASSES, passes))
-            , flags_(0) {
+            : sbox_ { sbox }
+            , count_ { 0 }
+            , cntPass_ { std::max (DEFAULT_PASSES, passes) }
+            , flags_ { 0 } {
         hash_ [0] = init_state_0 ;
         hash_ [1] = init_state_1 ;
         hash_ [2] = init_state_2 ;
@@ -209,8 +239,8 @@ namespace Tiger {
     }
 
     Generator & Generator::Update (const void *data, size_t size) {
-        const uint8_t * p = static_cast<const uint8_t *> (data) ;
-        uint8_t *       q = reinterpret_cast<uint8_t *> (&buffer_ [0]) ;
+        auto    p = static_cast<const uint8_t *> (data) ;
+        auto    q = reinterpret_cast<uint8_t *> (&buffer_ [0]) ;
 
         if (TARGET_LITTLE_ENDIAN) {
             for (size_t i = 0 ; i < size ; ++i) {
@@ -253,18 +283,6 @@ namespace Tiger {
         return *this ;
     }
 
-    static void ToByte (uint8_t *result, uint64_t value) {
-        if (TARGET_LITTLE_ENDIAN) {
-            memcpy (result, &value, sizeof (value)) ;
-        }
-        else {
-            const uint8_t *     p = reinterpret_cast<const uint8_t *> (&value) ;
-            for (size_t i = 0 ; i < sizeof (value) ; ++i) {
-                result [i ^ 0x07] = p [i] ;
-            }
-        }
-    }
-
     Digest      Generator::Finalize () {
         if (! IsFinalized ()) {
             uint8_t     pad [64] ;
@@ -298,10 +316,10 @@ namespace Tiger {
         return Digest (hash_) ;
     }
 
-    Digest::Digest (const uint64_t values [3]) {
-        ToByte (&values_ [ 0], values [0]) ;
-        ToByte (&values_ [ 8], values [1]) ;
-        ToByte (&values_ [16], values [2]) ;
+    Digest::Digest (const state_t &value) {
+        ToByte (&values_ [ 0], value [0]) ;
+        ToByte (&values_ [ 8], value [1]) ;
+        ToByte (&values_ [16], value [2]) ;
     }
 
     Digest::Digest (const Digest &src) {
@@ -335,22 +353,10 @@ namespace Tiger {
         return *this ;
     }
 
-    static uint64_t asUInt64 (const void *addr) {
-        auto p = static_cast<const uint8_t *> (addr) ;
-        return ((static_cast<uint64_t> (p [0]) <<  0) |
-                (static_cast<uint64_t> (p [1]) <<  8) |
-                (static_cast<uint64_t> (p [2]) << 16) |
-                (static_cast<uint64_t> (p [3]) << 24) |
-                (static_cast<uint64_t> (p [4]) << 32) |
-                (static_cast<uint64_t> (p [5]) << 40) |
-                (static_cast<uint64_t> (p [6]) << 48) |
-                (static_cast<uint64_t> (p [7]) << 56)) ;
-    }
-
     size_t Digest::Hash () const {
-        auto v = (asUInt64 (&values_ [ 0]) ^
-                  asUInt64 (&values_ [ 8]) ^
-                  asUInt64 (&values_ [16])) ;
+        auto v = ( asUInt64 (&values_ [ 0])
+                 ^ asUInt64 (&values_ [ 8])
+                 ^ asUInt64 (&values_ [16])) ;
         if (sizeof (size_t) == 4) {
             return static_cast<size_t> ((v >> 32) ^ v) ;
         }
