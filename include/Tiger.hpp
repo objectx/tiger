@@ -1,12 +1,11 @@
 /*
- * Tiger.h: Tiger hash.
- *
- * AUTHOR(S): objectx
- *
+ * Copyright (c) 2019  Masashi Fujita.  All rights reserved.
  */
+/// @file
+/// @brief Tiger hash function.
 #pragma once
-#ifndef tiger_h__a324fb584c589244176c2e965aa5cc34
-#define tiger_h__a324fb584c589244176c2e965aa5cc34 1
+#ifndef tiger_hpp__2FD3B095_004F_435F_A4C5_4FA2CA94E377
+#define tiger_hpp__2FD3B095_004F_435F_A4C5_4FA2CA94E377 1
 
 #include <array>
 #include <cstddef>
@@ -19,6 +18,7 @@ namespace Tiger {
     using state_t    = std::array<uint64_t, 3>;
     using msgblock_t = std::array<uint64_t, 8>;
     using digest_t   = std::array<uint8_t, 3 * 8>;
+
     /**
      * Initializes sbox with default configuration.
      *
@@ -26,7 +26,7 @@ namespace Tiger {
      *
      * @return SBOX
      */
-    sbox_t& InitializeSBox (sbox_t& sbox);
+    sbox_t& InitializeSBox (sbox_t& sbox) noexcept;
 
     /**
      * Initializes SBox with specified seed.
@@ -38,15 +38,12 @@ namespace Tiger {
      *
      * @return SBOX
      */
-    sbox_t& InitializeSBox (sbox_t& sbox, const void* seed, size_t seed_size, size_t passes);
+    sbox_t& InitializeSBox (sbox_t& sbox, const void* seed, size_t seed_size, size_t passes) noexcept;
 
     /** The Tiger192 generator.  */
     class Generator {
     private:
-        enum Flags {
-            BIT_FINALIZED = 0,
-            BIT_TIGER2    = 1
-        };
+        enum Flags { BIT_FINALIZED = 0, BIT_TIGER2 = 1 };
 
     private:
         const sbox_t& sbox_;
@@ -65,6 +62,7 @@ namespace Tiger {
         Generator (const sbox_t& sbox)
                 : Generator (sbox, DEFAULT_PASSES, false) { /* NO-OP */
         }
+
         /**
          * The constructor with the explicit pass counts.
          *
@@ -74,6 +72,7 @@ namespace Tiger {
         Generator (const sbox_t& sbox, size_t cntPass)
                 : Generator (sbox, cntPass, false) { /* NO-OP */
         }
+
         /**
          * The constructor with the explicit pass counts.
          *
@@ -81,17 +80,14 @@ namespace Tiger {
          * @param cntPass  # of iterations in the compression function.
          * @param isTiger2 Use Tiger2 padding
          */
-        Generator (const sbox_t& sbox, size_t cntPass, bool isTiger2);
+        Generator (const sbox_t& sbox, size_t cntPass, bool isTiger2) noexcept;
+
         /** Resets the state.  */
-        Generator& Reset ();
+        Generator& Reset () noexcept;
 
-        bool IsFinalized () const {
-            return (flags_ & (1u << BIT_FINALIZED)) != 0;
-        }
+        bool IsFinalized () const { return (flags_ & (1u << BIT_FINALIZED)) != 0; }
 
-        bool IsTiger2 () const {
-            return (flags_ & (1u << BIT_TIGER2)) != 0;
-        }
+        bool IsTiger2 () const { return (flags_ & (1u << BIT_TIGER2)) != 0; }
         /**
          * Updates states
          *
@@ -100,7 +96,7 @@ namespace Tiger {
          *
          * @return *this
          */
-        Generator& Update (const void* data, size_t size);
+        Generator& Update (const void* data, size_t size) noexcept;
 
         /**
          * Updates states
@@ -109,7 +105,7 @@ namespace Tiger {
          *
          * @return *this
          */
-        Generator& Update (uint8_t value);
+        Generator& Update (uint8_t value) noexcept;
 
         /**
          * Computes Tiger192 digest
@@ -117,11 +113,8 @@ namespace Tiger {
          * @remarks Once finalized, successive Finalize() returns the same value.
          * @return Computed digest
          */
-        digest_t Finalize ();
+        digest_t Finalize () noexcept;
     };
 } // namespace Tiger
 
-#endif /* tiger_h__a324fb584c589244176c2e965aa5cc34 */
-/*
- * [END OF FILE]
- */
+#endif /* tiger_hpp__2FD3B095_004F_435F_A4C5_4FA2CA94E377 */
