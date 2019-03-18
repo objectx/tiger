@@ -1,13 +1,6 @@
 
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.14)
 
-set (SOURCE_FILES Tiger.cpp)
-set (HEADER_FILES ${TIGER_SOURCE_DIR}/include/Tiger.hpp)
+target_sources (${PROJECT_NAME} PRIVATE Tiger.cpp)
 
-add_library (tiger ${SOURCE_FILES} ${HEADER_FILES})
-    target_include_directories (tiger PUBLIC $<BUILD_INTERFACE:${TIGER_SOURCE_DIR}/include>
-                                             $<INSTALL_INTERFACE:include>)
-    target_compile_features (tiger PRIVATE cxx_auto_type
-                                           cxx_delegating_constructors
-                                           cxx_nonstatic_member_init
-                                           cxx_generic_lambdas)
+target_compile_features (${PROJECT_NAME} PRIVATE cxx_std_14)
