@@ -8,6 +8,8 @@ project (tiger
          LANGUAGES CXX C
          VERSION 1.0.0.0)
 
+option (FORCE_RUNTIME_BYTEORDER_CHECKING "Dynamically checks the byte-order." OFF)
+
 list (INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_CURRENT_BINARY_DIR})
 
 function (setvar_default var_)

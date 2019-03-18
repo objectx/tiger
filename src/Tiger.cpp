@@ -8,6 +8,8 @@
 #include <cassert>
 #include <cstring>
 
+//#define FORCE_RUNTIME_BYTEORDER_CHECKING
+
 namespace {
 
     const uint64_t init_state_0 = 0x0123456789ABCDEFuLL;
@@ -16,6 +18,21 @@ namespace {
     const uint64_t schedule_0   = 0xA5A5A5A5A5A5A5A5uLL;
     const uint64_t schedule_1   = 0x0123456789ABCDEFuLL;
 
+#ifndef FORCE_RUNTIME_BYTEORDER_CHECKING
+#   if defined (__BYTE_ORDER__) &&             \
+       defined (__ORDER_LITTLE_ENDIAN__) &&    \
+       defined (__ORDER_BIG_ENDIAN__)
+#       if   __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    const bool TARGET_LITTLE_ENDIAN = true;
+#       elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    const bool TARGET_LITTLE_ENDIAN = false;
+#       else
+#           define FORCE_RUNTIME_BYTEORDER_CHECKING 1
+#       endif
+#   endif
+#endif  /* FORCE_RUNTIME_BYTEORDER_CHECKING */
+
+#ifdef FORCE_RUNTIME_BYTEORDER_CHECKING
     bool check_little_endian () noexcept {
         unsigned int val = 0x01020304;
 
@@ -30,19 +47,19 @@ namespace {
         assert (false);
         return false;
     }
-
     const bool TARGET_LITTLE_ENDIAN = check_little_endian ();
+#endif  /* FORCE_RUNTIME_BYTEORDER_CHECKING */
 
     inline uint64_t asUInt64 (const void* addr) {
         auto p = static_cast<const uint8_t*> (addr);
-        return (  (static_cast<uint64_t> (p[0]) <<  0u)
-                | (static_cast<uint64_t> (p[1]) <<  8u)
-                | (static_cast<uint64_t> (p[2]) << 16u)
-                | (static_cast<uint64_t> (p[3]) << 24u)
-                | (static_cast<uint64_t> (p[4]) << 32u)
-                | (static_cast<uint64_t> (p[5]) << 40u)
-                | (static_cast<uint64_t> (p[6]) << 48u)
-                | (static_cast<uint64_t> (p[7]) << 56u));
+        return ( (static_cast<uint64_t> (p[0]) <<  0u)
+               | (static_cast<uint64_t> (p[1]) <<  8u)
+               | (static_cast<uint64_t> (p[2]) << 16u)
+               | (static_cast<uint64_t> (p[3]) << 24u)
+               | (static_cast<uint64_t> (p[4]) << 32u)
+               | (static_cast<uint64_t> (p[5]) << 40u)
+               | (static_cast<uint64_t> (p[6]) << 48u)
+               | (static_cast<uint64_t> (p[7]) << 56u));
     }
 
     std::array<uint64_t, 8> make_work (const void* seed, size_t size) {
@@ -86,75 +103,77 @@ namespace {
              ^ sbox[1 * 256 + c5]
              ^ sbox[0 * 256 + c7]);
         b *= mul;
-    };
+    }
 
 } // namespace
 
 namespace Tiger {
 
-    static void Compress (state_t& state, const msgblock_t& input, const sbox_t& sbox, size_t passes) {
-        uint_fast64_t a = state[0];
-        uint_fast64_t b = state[1];
-        uint_fast64_t c = state[2];
+    namespace {
+        void Compress (state_t& state, const msgblock_t& input, const sbox_t& sbox, size_t passes) {
+            uint_fast64_t a = state[0];
+            uint_fast64_t b = state[1];
+            uint_fast64_t c = state[2];
 
-        uint_fast64_t x0 = input[0];
-        uint_fast64_t x1 = input[1];
-        uint_fast64_t x2 = input[2];
-        uint_fast64_t x3 = input[3];
-        uint_fast64_t x4 = input[4];
-        uint_fast64_t x5 = input[5];
-        uint_fast64_t x6 = input[6];
-        uint_fast64_t x7 = input[7];
+            uint_fast64_t x0 = input[0];
+            uint_fast64_t x1 = input[1];
+            uint_fast64_t x2 = input[2];
+            uint_fast64_t x3 = input[3];
+            uint_fast64_t x4 = input[4];
+            uint_fast64_t x5 = input[5];
+            uint_fast64_t x6 = input[6];
+            uint_fast64_t x7 = input[7];
 
-        auto schedule = [&x0, &x1, &x2, &x3, &x4, &x5, &x6, &x7]() {
-            x0 -= x7 ^ schedule_0;
-            x1 ^= x0;
-            x2 += x1;
-            x3 -= x2 ^ ((~x1) << 19u);
-            x4 ^= x3;
-            x5 += x4;
-            x6 -= x5 ^ ((~x4) >> 23u);
-            x7 ^= x6;
-            x0 += x7;
-            x1 -= x0 ^ ((~x7) << 19u);
-            x2 ^= x1;
-            x3 += x2;
-            x4 -= x3 ^ ((~x2) >> 23u);
-            x5 ^= x4;
-            x6 += x5;
-            x7 -= x6 ^ schedule_1;
-        };
+            auto schedule = [&x0, &x1, &x2, &x3, &x4, &x5, &x6, &x7]() {
+                x0 -= x7 ^ schedule_0;
+                x1 ^= x0;
+                x2 += x1;
+                x3 -= x2 ^ ((~x1) << 19u);
+                x4 ^= x3;
+                x5 += x4;
+                x6 -= x5 ^ ((~x4) >> 23u);
+                x7 ^= x6;
+                x0 += x7;
+                x1 -= x0 ^ ((~x7) << 19u);
+                x2 ^= x1;
+                x3 += x2;
+                x4 -= x3 ^ ((~x2) >> 23u);
+                x5 ^= x4;
+                x6 += x5;
+                x7 -= x6 ^ schedule_1;
+            };
 
-        auto pass = [&](const sbox_t& S, uint64_t& A, uint64_t& B, uint64_t& C, uint64_t MUL) {
-            round (S, A, B, C, x0, MUL);
-            round (S, B, C, A, x1, MUL);
-            round (S, C, A, B, x2, MUL);
-            round (S, A, B, C, x3, MUL);
-            round (S, B, C, A, x4, MUL);
-            round (S, C, A, B, x5, MUL);
-            round (S, A, B, C, x6, MUL);
-            round (S, B, C, A, x7, MUL);
-        };
+            auto pass = [&](const sbox_t& S, uint64_t& A, uint64_t& B, uint64_t& C, uint64_t MUL) {
+                round (S, A, B, C, x0, MUL);
+                round (S, B, C, A, x1, MUL);
+                round (S, C, A, B, x2, MUL);
+                round (S, A, B, C, x3, MUL);
+                round (S, B, C, A, x4, MUL);
+                round (S, C, A, B, x5, MUL);
+                round (S, A, B, C, x6, MUL);
+                round (S, B, C, A, x7, MUL);
+            };
 
-        pass (sbox, a, b, c, 5);
-        schedule ();
-        pass (sbox, c, a, b, 7);
-        schedule ();
-        pass (sbox, b, c, a, 9);
-
-        for (size_t cnt = 3; cnt < passes; ++cnt) {
+            pass (sbox, a, b, c, 5);
             schedule ();
-            pass (sbox, a, b, c, 9);
+            pass (sbox, c, a, b, 7);
+            schedule ();
+            pass (sbox, b, c, a, 9);
 
-            uint64_t tmp = a;
-            a            = c;
-            c            = b;
-            b            = tmp;
+            for (size_t cnt = 3; cnt < passes; ++cnt) {
+                schedule ();
+                pass (sbox, a, b, c, 9);
+
+                auto tmp = a;
+                a        = c;
+                c        = b;
+                b        = tmp;
+            }
+            state[0] = a ^ state[0];
+            state[1] = b - state[1];
+            state[2] = c + state[2];
         }
-        state[0] = a ^ state[0];
-        state[1] = b - state[1];
-        state[2] = c + state[2];
-    }
+    } // namespace
 
     sbox_t& InitializeSBox (sbox_t& sbox) {
         return InitializeSBox (sbox, "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham", 64, 5);
@@ -224,7 +243,7 @@ namespace Tiger {
 
         if (TARGET_LITTLE_ENDIAN) {
             for (size_t i = 0; i < size; ++i) {
-                size_t idx = count_ & 0x3F;
+                size_t idx = count_ & 0x3Fu;
                 if (0 < count_ && idx == 0) {
                     Compress (hash_, buffer_, sbox_, cntPass_);
                 }
@@ -234,7 +253,7 @@ namespace Tiger {
         }
         else {
             for (size_t i = 0; i < size; ++i) {
-                size_t idx = count_ & 0x3F;
+                size_t idx = count_ & 0x3Fu;
                 if (0 < count_ && idx == 0) {
                     Compress (hash_, buffer_, sbox_, cntPass_);
                 }
