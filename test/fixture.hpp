@@ -1,5 +1,6 @@
-#ifndef TIGER_FIXTURE_HPP
-#define TIGER_FIXTURE_HPP  1
+#pragma once
+#ifndef fixture_hpp__B91CE273_5E78_44AC_BFCA_B39803B4018D
+#define fixture_hpp__B91CE273_5E78_44AC_BFCA_B39803B4018D  1
 
 #include <Tiger.hpp>
 
@@ -14,4 +15,4 @@ public:
     const Tiger::sbox_t & sbox () const { return sbox_ ; }
 } ;
 
-#endif /* TIGER_FIXTURE_HPP */
+#endif /* fixture_hpp__B91CE273_5E78_44AC_BFCA_B39803B4018D */
