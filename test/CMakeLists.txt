@@ -12,7 +12,7 @@ target_compile_features (test-${PROJECT_NAME} PRIVATE cxx_std_14)
 
 target_sources (test-${PROJECT_NAME}
                 PRIVATE default.cpp
-                        explicit.cpp
+                        tiger2.cpp
                         to_string.hpp
                         fixture.hpp
                         main.cpp)

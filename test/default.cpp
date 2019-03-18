@@ -9,7 +9,7 @@
 #include <cstdint>
 
 
-TEST_CASE_METHOD (TigerFixture, "Test Generator", "[generator]") {
+TEST_CASE_METHOD (TigerFixture, "Test Generator (Type 1)", "[generator]") {
     using namespace fmt::literals;
 
     Tiger::Generator    gen (sbox ()) ;
