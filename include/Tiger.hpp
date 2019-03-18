@@ -8,8 +8,8 @@
 #ifndef tiger_h__a324fb584c589244176c2e965aa5cc34
 #define tiger_h__a324fb584c589244176c2e965aa5cc34       1
 
-#include <sys/types.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 #include <array>
 
 namespace Tiger {
