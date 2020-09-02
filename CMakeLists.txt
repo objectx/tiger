@@ -10,7 +10,7 @@ project (tiger
 
 option (FORCE_RUNTIME_BYTEORDER_CHECKING "Dynamically checks the byte-order." OFF)
 
-list (INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_CURRENT_BINARY_DIR})
+include (${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
 function (setvar_default var_)
     if (NOT DEFINED ${var_})
