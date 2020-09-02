@@ -5,6 +5,7 @@
 #include "Tiger.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstring>
 
@@ -34,7 +35,7 @@ namespace {
     bool check_little_endian () noexcept {
         unsigned int val = 0x01020304;
 
-        auto p = reinterpret_cast<const uint8_t*> (&val);
+        auto p = reinterpret_cast<const uint8_t *> (&val);
 
         if (p[0] == 0x04 && p[1] == 0x03 && p[2] == 0x02 && p[3] == 0x01) {
             return true;
@@ -48,8 +49,8 @@ namespace {
     const bool TARGET_LITTLE_ENDIAN = check_little_endian ();
 #endif /* FORCE_RUNTIME_BYTEORDER_CHECKING */
 
-    inline uint64_t as_uint64 (const void* addr) {
-        auto p = static_cast<const uint8_t*> (addr);
+    inline uint64_t as_uint64 (const void *addr) {
+        auto const *p = static_cast<const uint8_t *> (addr);
         // clang-format off
         return ( (static_cast<uint64_t> (p[0]) <<  0u)
                | (static_cast<uint64_t> (p[1]) <<  8u)
@@ -63,7 +64,7 @@ namespace {
         // clang-format on
     }
 
-    std::array<uint64_t, 8> make_work (const void* seed, size_t size) {
+    std::array<uint64_t, 8> make_work (const void *seed, size_t size) {
         std::array<uint8_t, 64> tmp;
 
         tmp.fill (0);
@@ -81,19 +82,19 @@ namespace {
         // clang-format on
     }
 
-    void to_bytes (uint8_t* result, uint64_t value) {
+    void to_bytes (uint8_t *result, uint64_t value) {
         if (TARGET_LITTLE_ENDIAN) {
             memcpy (result, &value, sizeof (value));
         }
         else {
-            auto p = reinterpret_cast<const uint8_t*> (&value);
+            auto p = reinterpret_cast<const uint8_t *> (&value);
             for (size_t i = 0; i < sizeof (value); ++i) {
                 result[i ^ 0x07u] = p[i];
             }
         }
     }
 
-    inline void round (const Tiger::sbox_t& sbox, uint64_t& a, uint64_t& b, uint64_t& c, uint64_t x, uint64_t mul) {
+    inline void round (const Tiger::sbox_t &sbox, uint64_t &a, uint64_t &b, uint64_t &c, uint64_t x, uint64_t mul) {
         c ^= x;
         // clang-format off
         auto const c0 = static_cast<uint8_t> (c >>  0u);
@@ -111,12 +112,12 @@ namespace {
         b *= mul;
     }
 
-} // namespace
+}  // namespace
 
 namespace Tiger {
 
     namespace {
-        void Compress (state_t& state, const msgblock_t& input, const sbox_t& sbox, size_t passes) noexcept {
+        void Compress (state_t &state, const msgblock_t &input, const sbox_t &sbox, size_t passes) noexcept {
             uint_fast64_t a = state[0];
             uint_fast64_t b = state[1];
             uint_fast64_t c = state[2];
@@ -130,7 +131,7 @@ namespace Tiger {
             uint_fast64_t x6 = input[6];
             uint_fast64_t x7 = input[7];
 
-            auto schedule = [&x0, &x1, &x2, &x3, &x4, &x5, &x6, &x7]() {
+            auto schedule = [&x0, &x1, &x2, &x3, &x4, &x5, &x6, &x7] () {
                 x0 -= x7 ^ schedule_0;
                 x1 ^= x0;
                 x2 += x1;
@@ -149,7 +150,7 @@ namespace Tiger {
                 x7 -= x6 ^ schedule_1;
             };
 
-            auto pass = [&](const sbox_t& S, uint64_t& A, uint64_t& B, uint64_t& C, uint64_t MUL) {
+            auto pass = [&] (const sbox_t &S, uint64_t &A, uint64_t &B, uint64_t &C, uint64_t MUL) {
                 round (S, A, B, C, x0, MUL);
                 round (S, B, C, A, x1, MUL);
                 round (S, C, A, B, x2, MUL);
@@ -179,17 +180,20 @@ namespace Tiger {
             state[1] = b - state[1];
             state[2] = c + state[2];
         }
-    } // namespace
+    }  // namespace
 
-    sbox_t& InitializeSBox (sbox_t& sbox) noexcept {
-        return InitializeSBox (sbox, "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham", 64, 5);
+    sbox_t &InitializeSBox (sbox_t &sbox) noexcept {
+        return InitializeSBox (sbox,
+                               "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham",
+                               64,
+                               5);
     }
 
-    sbox_t& InitializeSBox (sbox_t& sbox, const void* seed, size_t seed_size, size_t passes) noexcept {
+    sbox_t &InitializeSBox (sbox_t &sbox, const void *seed, size_t seed_size, size_t passes) noexcept {
         state_t state {{init_state_0, init_state_1, init_state_2}};
 
         for (size_t i = 0; i < sbox.size (); ++i) {
-            auto make_fillval = [](size_t idx) -> uint64_t {
+            auto make_fillval = [] (size_t idx) -> uint64_t {
                 auto v = static_cast<uint64_t> (idx & 0xFFu);
                 // clang-format off
                 return ((v <<  0u) |
@@ -208,8 +212,8 @@ namespace Tiger {
         auto work = make_work (seed, seed_size);
 
         int_fast32_t abc = 2;
-        auto         tp  = reinterpret_cast<uint8_t*> (&sbox[0]);
-        auto         sp  = reinterpret_cast<uint8_t*> (&state[0]);
+        auto         tp  = reinterpret_cast<uint8_t *> (&sbox[0]);
+        auto         sp  = reinterpret_cast<uint8_t *> (&state[0]);
         for (size_t cnt = 0; cnt < passes; ++cnt) {
             for (int_fast32_t i = 0; i < 256; ++i) {
                 for (int_fast32_t sb = 0; sb < 1024; sb += 256) {
@@ -227,7 +231,7 @@ namespace Tiger {
         return sbox;
     }
 
-    Generator::Generator (const sbox_t& sbox, size_t passes, bool isTiger2) noexcept
+    Generator::Generator (const sbox_t &sbox, size_t passes, bool isTiger2) noexcept
             : sbox_ {sbox}
             , cntPass_ {std::max (DEFAULT_PASSES, passes)}
             , hash_ {{init_state_0, init_state_1, init_state_2}} {
@@ -236,7 +240,7 @@ namespace Tiger {
         }
     }
 
-    Generator& Generator::Reset () noexcept {
+    Generator &Generator::Reset () noexcept {
         count_   = 0;
         hash_[0] = init_state_0;
         hash_[1] = init_state_1;
@@ -245,9 +249,9 @@ namespace Tiger {
         return *this;
     }
 
-    Generator& Generator::Update (const void* data, size_t size) noexcept {
-        auto p = static_cast<const uint8_t*> (data);
-        auto q = reinterpret_cast<uint8_t*> (&buffer_[0]);
+    Generator &Generator::Update (const void *data, size_t size) noexcept {
+        auto p = static_cast<const uint8_t *> (data);
+        auto q = reinterpret_cast<uint8_t *> (&buffer_[0]);
 
         if (TARGET_LITTLE_ENDIAN) {
             for (size_t i = 0; i < size; ++i) {
@@ -272,14 +276,14 @@ namespace Tiger {
         return *this;
     }
 
-    Generator& Generator::Update (uint8_t value) noexcept {
+    Generator &Generator::Update (uint8_t value) noexcept {
         size_t idx = count_ & 0x3Fu;
 
         if (0 < count_ && idx == 0) {
             Compress (hash_, buffer_, sbox_, cntPass_);
         }
 
-        auto q = reinterpret_cast<uint8_t*> (&buffer_[0]);
+        auto q = reinterpret_cast<uint8_t *> (&buffer_[0]);
         if (TARGET_LITTLE_ENDIAN) {
             q[idx] = value;
         }
@@ -291,7 +295,7 @@ namespace Tiger {
     }
 
     digest_t Generator::Finalize () noexcept {
-        if (!IsFinalized ()) {
+        if (! IsFinalized ()) {
             uint8_t pad[64];
 
             ::memset (pad, 0, sizeof (pad));
@@ -326,4 +330,4 @@ namespace Tiger {
         to_bytes (&result[16], hash_[2]);
         return result;
     }
-} // namespace Tiger
+}  // namespace Tiger
